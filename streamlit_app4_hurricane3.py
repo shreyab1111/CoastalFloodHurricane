@@ -15,7 +15,8 @@ import geemap.foliumap as geemap
 # ---------------- Earth Engine init ----------------
 def init_ee():
     try:
-        ee.Initialize(project='sea-level-analysis')
+        # ee.Initialize(project='sea-level-analysis')  # Original line - requires project access
+        ee.Initialize()  # Modified to use default EE setup
     except Exception as e:
         st.error("Earth Engine failed to initialize. Run `earthengine authenticate` or use a service account.")
         st.exception(e); raise
@@ -38,27 +39,43 @@ st.set_page_config(layout="wide", page_title="Flood + Hurricane Viewer")
 # ---------------- Caches ----------------
 @st.cache_resource(show_spinner=False)
 def get_dem():
-    return ee.ImageCollection("users/amanaryya1/coastal-dem-files").mosaic().rename("elev").toFloat()
+    # return ee.ImageCollection("users/amanaryya1/coastal-dem-files").mosaic().rename("elev").toFloat()  # Original line - private assets
+    # Use a publicly available DEM dataset instead of private assets
+    try:
+        return ee.Image("USGS/SRTMGL1_003").select('elevation').rename("elev").toFloat()
+    except Exception:
+        st.warning("⚠️ Using fallback DEM data. Some features may be limited.")
+        return ee.Image.constant(0.0).toFloat()
 
 @st.cache_resource(show_spinner=False)
 def get_sla_image_m(year: str, month_str: str) -> ee.Image:
-    img_id = f"projects/sea-level-analysis/assets/Jiayou/sla_{year}-{month_str}-15"
-    try:
-        sla_mm = ee.Image(img_id).toFloat().unmask(0)  # mm
-        return sla_mm.divide(1000.0)  # -> meters
-    except Exception:
-        return ee.Image.constant(0.0).toFloat()
+    # img_id = f"projects/sea-level-analysis/assets/Jiayou/sla_{year}-{month_str}-15"  # Original line - requires project access
+    # try:
+    #     sla_mm = ee.Image(img_id).toFloat().unmask(0)  # mm
+    #     return sla_mm.divide(1000.0)  # -> meters
+    # except Exception:
+    #     return ee.Image.constant(0.0).toFloat()
+    
+    # Note: This requires access to the sea-level-analysis project
+    # For now, return a constant image as placeholder
+    st.warning("⚠️ Sea level data requires access to 'sea-level-analysis' project. Using placeholder data.")
+    return ee.Image.constant(0.0).toFloat()
 
 @st.cache_resource(show_spinner=False)
 def get_month_collection(month_str: str):
     years = list(range(1993, 2023))
     ims = []
     for y in years:
-        img_id = f"projects/sea-level-analysis/assets/Jiayou/sla_{y}-{month_str}-15"
-        try:
-            im = ee.Image(img_id).toFloat().unmask(0).divide(1000.0).set('year', y)  # meters
-        except Exception:
-            im = ee.Image.constant(0.0).toFloat().set('year', y)
+        # img_id = f"projects/sea-level-analysis/assets/Jiayou/sla_{y}-{month_str}-15"  # Original line - requires project access
+        # try:
+        #     im = ee.Image(img_id).toFloat().unmask(0).divide(1000.0).set('year', y)  # meters
+        # except Exception:
+        #     im = ee.Image.constant(0.0).toFloat().set('year', y)
+        # ims.append(im)
+        
+        # Note: This requires access to the sea-level-analysis project
+        # For now, return constant images as placeholders
+        im = ee.Image.constant(0.0).toFloat().set('year', y)
         ims.append(im)
     return ee.ImageCollection(ims), years
 

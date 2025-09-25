@@ -1,0 +1,11 @@
+# Core dependencies for Flood + Hurricane Viewer
+streamlit==1.50.0
+streamlit-folium==0.25.2
+earthengine-api==1.6.9
+geemap==0.36.3
+folium==0.20.0
+pandas==2.3.2
+matplotlib==3.10.6
+requests==2.32.5
+numpy==2.3.3
+pillow==11.3.0
