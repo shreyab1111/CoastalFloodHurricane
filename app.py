@@ -13,12 +13,30 @@ from streamlit_folium import st_folium
 import geemap.foliumap as geemap
 
 # ---------------- Earth Engine init ----------------
+# def init_ee():
+#     try:
+#         ee.Initialize(project='sea-level-analysis')
+#     except Exception as e:
+#         st.error("Earth Engine failed to initialize. Run `earthengine authenticate` or use a service account.")
+#         st.exception(e); raise
+
 def init_ee():
+    import ee, streamlit as st
     try:
-        ee.Initialize(project='sea-level-analysis')
+        sa_email = st.secrets["gee"]["service_account_email"]
+        sa_key   = st.secrets["gee"]["service_account_key"]
+        project  = st.secrets["gee"]["project"]
+
+        creds = ee.ServiceAccountCredentials(sa_email, key_data=sa_key)
+        ee.Initialize(credentials=creds, project=project)
+
     except Exception as e:
-        st.error("Earth Engine failed to initialize. Run `earthengine authenticate` or use a service account.")
-        st.exception(e); raise
+        st.error("Earth Engine failed to initialize. Check service account and secrets.")
+        st.exception(e)
+        raise
+
+init_ee()
+
 init_ee()
 
 # ---------------- Constants ----------------
