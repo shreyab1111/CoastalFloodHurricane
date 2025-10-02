@@ -21,31 +21,20 @@ import geemap.foliumap as geemap
 #         st.exception(e); raise
 
 def init_ee():
-    import ee, streamlit as st, json
+    import ee, streamlit as st
     try:
-        sa_email = st.secrets["gee"]["service_account_email"]
+        sa_email = st.secrets["gee"]["email"]
         proj     = st.secrets["gee"]["project"]
-        raw_key  = st.secrets["gee"]["service_account_key"]  # could be JSON or a PEM string
+        pem      = st.secrets["gee"]["private_key"]
 
-        # If you pasted the FULL JSON into Secrets, extract the PEM:
-        private_key = raw_key
-        if isinstance(raw_key, str) and raw_key.strip().startswith("{"):
-            info = json.loads(raw_key)
-            private_key = info["private_key"]  # '-----BEGIN PRIVATE KEY-----\n...'
-
-        creds = ee.ServiceAccountCredentials(sa_email, key_data=private_key)
+        creds = ee.ServiceAccountCredentials(sa_email, key_data=pem)
         ee.Initialize(credentials=creds, project=proj)
-
     except Exception as e:
         st.error("Earth Engine failed to initialize. Check service account and secrets.")
         st.exception(e); raise
 
 init_ee()
 
-
-init_ee()
-
-init_ee()
 
 # ---------------- Constants ----------------
 MONTH_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
