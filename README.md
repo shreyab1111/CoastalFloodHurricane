@@ -23,7 +23,7 @@ earthengine authenticate
 
 ## Run
 ```bash
-streamlit run streamlit_app4_hurricane3.py
+streamlit run app.py
 ```
 
 ## License
