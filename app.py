@@ -21,19 +21,27 @@ import geemap.foliumap as geemap
 #         st.exception(e); raise
 
 def init_ee():
-    import ee, streamlit as st
+    import ee, streamlit as st, json
     try:
         sa_email = st.secrets["gee"]["service_account_email"]
-        sa_key   = st.secrets["gee"]["service_account_key"]
-        project  = st.secrets["gee"]["project"]
+        proj     = st.secrets["gee"]["project"]
+        raw_key  = st.secrets["gee"]["service_account_key"]  # could be JSON or a PEM string
 
-        creds = ee.ServiceAccountCredentials(sa_email, key_data=sa_key)
-        ee.Initialize(credentials=creds, project=project)
+        # If you pasted the FULL JSON into Secrets, extract the PEM:
+        private_key = raw_key
+        if isinstance(raw_key, str) and raw_key.strip().startswith("{"):
+            info = json.loads(raw_key)
+            private_key = info["private_key"]  # '-----BEGIN PRIVATE KEY-----\n...'
+
+        creds = ee.ServiceAccountCredentials(sa_email, key_data=private_key)
+        ee.Initialize(credentials=creds, project=proj)
 
     except Exception as e:
         st.error("Earth Engine failed to initialize. Check service account and secrets.")
-        st.exception(e)
-        raise
+        st.exception(e); raise
+
+init_ee()
+
 
 init_ee()
 
