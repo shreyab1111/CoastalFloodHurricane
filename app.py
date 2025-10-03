@@ -627,7 +627,7 @@ with right_col:
             df = pd.DataFrame(storm_rows, columns=cols)
             header_h = 38; row_h = 32
             height = header_h + row_h * max(1, len(df))
-            st.dataframe(df, use_container_width=True, height=height, hide_index=True)
+            st.dataframe(df, width='stretch', height=height, hide_index=True)
         else:
             st.info("No storms found for the current selection.")
 
