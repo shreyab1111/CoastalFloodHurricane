@@ -490,7 +490,7 @@ m.get_root().html.add_child(folium.Element("""
 </style>
 """))
 
-m.add_basemap("HYBRID"); m.add_basemap("Google Labels")
+m.add_basemap("HYBRID"); #m.add_basemap("Google Labels")
 
 flood_vis = {
     'min': 0, 'max': 5,
