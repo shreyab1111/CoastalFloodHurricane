@@ -36,6 +36,80 @@ def init_ee():
 init_ee()
 
 
+
+# ---------- [PATCH-0 IMPORTS+UTILS START] ----------
+import json, math
+import streamlit as st
+
+def ui_apply_slider(label, vmin, vmax, vstep, qkey, default=0.0, help_txt=None):
+    """
+    Pattern: a smooth slider + an Apply button that commits to query params and session state.
+    Returns the committed/binned value. Only recomputes when Apply is clicked.
+    """
+    live_key = f"{qkey}__live"
+    bin_key  = f"{qkey}__bin"
+
+    # init committed value from query params or default
+    if bin_key not in st.session_state:
+        qp = st.query_params
+        st.session_state[bin_key] = float(qp.get(qkey, default))
+
+    # live control
+    live_val = st.slider(label, min_value=float(vmin), max_value=float(vmax),
+                         value=float(st.session_state[bin_key]),
+                         step=float(vstep), key=live_key, help=help_txt)
+
+    col1, col2 = st.columns([1,1])
+    with col1:
+        if st.button("Apply", key=f"apply_{qkey}"):
+            # optional binning to slider step to reduce churn
+            binned = round(live_val / vstep) * vstep
+            st.session_state[bin_key] = float(binned)
+            # reflect into URL for sharable permalinks
+            st.query_params[qkey] = f"{binned:.3f}"
+            st.rerun()
+
+    with col2:
+        st.caption(f"Committed: {st.session_state[bin_key]:.3f}")
+
+    return float(st.session_state[bin_key])
+
+def init_state_from_query(defaults: dict):
+    """Call once on load. Seeds session_state from query params using provided defaults."""
+    if st.session_state.get("_bootstrapped"):  # idempotent
+        return
+    qp = st.query_params
+    for k, v in defaults.items():
+        st.session_state.setdefault(k, type(v)(qp.get(k, v)))
+    st.session_state["_bootstrapped"] = True
+
+def sync_query_params(keys):
+    """Reflect selected state keys into URL query params."""
+    for k in keys:
+        val = st.session_state.get(k)
+        if val is None: 
+            continue
+        st.query_params[k] = f"{val}"
+
+def get_dynamic_scale(zoom: int):
+    """Coarser EE scale when zoomed out (big speedup without visible loss)."""
+    if zoom >= 11: return 150
+    if zoom >= 9:  return 300
+    if zoom >= 7:  return 600
+    if zoom >= 5:  return 1200
+    return 2400
+
+@st.cache_data(show_spinner=False)
+def _cache_small_json(tag: str, payload: dict):
+    """Generic small-cache helper for tables/metadata you build."""
+    return json.dumps(payload)
+
+# ---------- [PATCH-0 IMPORTS+UTILS END] ----------
+
+
+
+
+
 # ---------------- Constants ----------------
 MONTH_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 DEFAULT_ANALYSIS_SCALE_M = 300
