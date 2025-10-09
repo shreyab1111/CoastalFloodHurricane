@@ -124,6 +124,29 @@ os.environ["SATELLITE"] = 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'
 # ---------------- Streamlit page config ----------------
 st.set_page_config(layout="wide", page_title="Flood + Hurricane Viewer")
 
+
+
+
+
+
+
+
+
+# ---------- [PATCH-1 PERMALINKS START] ----------
+# Seed important defaults only once; these keys become permalinks.
+init_state_from_query({
+    "lat": 29.95,         # change default center if you like
+    "lon": -90.07,
+    "z": 8,               # map zoom
+    "year": 2050,
+    "month": "08",
+    "slr_adj": 0.00,      # extra SLR meters (committed value)
+    "rad_km": 50,         # search radius
+    "perf": True          # performance mode default
+})
+# ---------- [PATCH-1 PERMALINKS END] ----------
+
+
 # ---------------- Caches ----------------
 @st.cache_resource(show_spinner=False)
 def get_dem():
