@@ -124,6 +124,16 @@ os.environ["SATELLITE"] = 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'
 # ---------------- Streamlit page config ----------------
 st.set_page_config(layout="wide", page_title="Flood + Hurricane Viewer")
 
+# --- Layout + fixed map height (add right after st.set_page_config) ---
+# st.set_page_config(layout="wide")  # if you don't already have wide
+MAP_HEIGHT = 720  # keep constant to avoid reflow
+
+# Lock the st_folium iframe height so it doesn't bounce
+st.markdown("""
+    <style>
+    iframe[title="st_folium"] { height: 720px !important; }
+    </style>
+""", unsafe_allow_html=True)
 
 
 
@@ -505,59 +515,100 @@ if "storm_name"   not in st.session_state: st.session_state["storm_name"] = ""
 
 st.title("Flood + Hurricane Viewer")
 
+# with st.sidebar:
+#     st.markdown('<h2 style="margin-top:0rem;margin-bottom:0.5rem">Sea Level Rise</h2>', unsafe_allow_html=True)
+#     years = [str(y) for y in range(1993, 2023)]
+#     year = st.selectbox("SLA Year", years, index=years.index("2020"))
+
+#     st.markdown("### Select Month")
+#     month_map = {label: f"{i+1:02d}" for i, label in enumerate(MONTH_LABELS)}
+#     for row in [MONTH_LABELS[i:i+4] for i in range(0, 12, 4)]:
+#         cols = st.columns(4, gap="small")
+#         for i, label in enumerate(row):
+#             if cols[i].button(label, key=f"month_{label}"):
+#                 st.session_state["selected_month"] = month_map[label]
+#                 # 🔁 Ensure immediate refresh of flood layer on month change
+#                 st.rerun()
+
+#     st.markdown("### Flood Controls")
+#     adj_val = st.slider("Extra Sea Level Rise (m)", 0.0, 5.0, 0.0, 0.05, key="sld_adj")
+#     adj_bin = round(adj_val / 0.25) * 0.25
+
+#     st.markdown("### Hurricanes (NOAA IBTrACS v4)")
+#     show_hist_hurr = st.checkbox("Show storms near clicked point", value=True, key="chk_hist_hurr")
+#     rad_km = st.slider("Search radius (km)", 50, 600, 250, 25, key="sld_radius") if show_hist_hurr else None
+
+#     impact_mode = "None"
+#     if show_hist_hurr:
+#         impact_mode = st.selectbox(
+#             "Choose overlay", ["None", "Circles by SSHS"], index=0,
+#             help="Draw approximate affected area via category-based concentric circles."
+#         )
+
+#     st.session_state["storm_name"] = st.text_input("Search by storm NAME",
+#         value=st.session_state.get("storm_name", "")).strip()
+
+#     st.markdown("### Location Search")
+#     c1, c2 = st.columns(2)
+#     with c1: st.text_input("Lat", value=str(st.session_state["center_lat"]), key="lat_in")
+#     with c2: st.text_input("Lon", value=str(st.session_state["center_lon"]), key="lon_in")
+#     address = st.text_input("Type a location (e.g., Miami Beach)", key="txt_addr")
+#     if st.button("Search", key="btn_search") and address.strip():
+#         try:
+#             resp = geocode(address)
+#             if resp:
+#                 st.session_state["center_lat"] = float(resp[0]["lat"])
+#                 st.session_state["center_lon"] = float(resp[0]["lon"])
+#                 st.session_state["clicked_lat"] = st.session_state["center_lat"]
+#                 st.session_state["clicked_lon"] = st.session_state["center_lon"]
+#                 st.session_state["zoom"] = 5
+#                 st.success(f"📍 Found: {resp[0]['display_name']}")
+#                 st.rerun()  # refresh map right away after search
+#             else:
+#                 st.warning("❌ No location found.")
+#         except Exception as e:
+#             st.error(f"⚠️ Error: {e}")
+
+
+
+
 with st.sidebar:
-    st.markdown('<h2 style="margin-top:0rem;margin-bottom:0.5rem">Sea Level Rise</h2>', unsafe_allow_html=True)
-    years = [str(y) for y in range(1993, 2023)]
-    year = st.selectbox("SLA Year", years, index=years.index("2020"))
+    with st.form("controls"):
+        st.markdown("### Sea Level Rise")
+        years = [str(y) for y in range(1993, 2023)]
+        year = st.selectbox("SLA Year", years, index=years.index("2020"))
 
-    st.markdown("### Select Month")
-    month_map = {label: f"{i+1:02d}" for i, label in enumerate(MONTH_LABELS)}
-    for row in [MONTH_LABELS[i:i+4] for i in range(0, 12, 4)]:
-        cols = st.columns(4, gap="small")
-        for i, label in enumerate(row):
-            if cols[i].button(label, key=f"month_{label}"):
-                st.session_state["selected_month"] = month_map[label]
-                # 🔁 Ensure immediate refresh of flood layer on month change
-                st.rerun()
+        st.markdown("### Select Month")
+        MONTH_LABELS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+        month_map = {label: f"{i+1:02d}" for i, label in enumerate(MONTH_LABELS)}
+        # keep your month buttons OR use a dropdown; if you keep buttons, no form submit needed for them
 
-    st.markdown("### Flood Controls")
-    adj_val = st.slider("Extra Sea Level Rise (m)", 0.0, 5.0, 0.0, 0.05, key="sld_adj")
-    adj_bin = round(adj_val / 0.25) * 0.25
+        st.markdown("### Flood Controls")
+        adj_val = st.slider("Extra Sea Level Rise (m)", 0.0, 5.0, 0.0, 0.05, key="sld_adj")
+        adj_bin = round(adj_val / 0.25) * 0.25
 
-    st.markdown("### Hurricanes (NOAA IBTrACS v4)")
-    show_hist_hurr = st.checkbox("Show storms near clicked point", value=True, key="chk_hist_hurr")
-    rad_km = st.slider("Search radius (km)", 50, 600, 250, 25, key="sld_radius") if show_hist_hurr else None
+        st.markdown("### Hurricanes (NOAA IBTrACS v4)")
+        show_hist_hurr = st.checkbox("Show storms near clicked point", value=True, key="chk_hist_hurr")
+        rad_km = st.slider("Search radius (km)", 50, 600, 250, 25, key="sld_radius") if show_hist_hurr else None
+        impact_mode = "None"
+        if show_hist_hurr:
+            impact_mode = st.selectbox(
+                "Choose overlay", ["None", "Circles by SSHS"], index=0
+            )
 
-    impact_mode = "None"
-    if show_hist_hurr:
-        impact_mode = st.selectbox(
-            "Choose overlay", ["None", "Circles by SSHS"], index=0,
-            help="Draw approximate affected area via category-based concentric circles."
-        )
+        storm_name_filter = st.text_input("Search by storm NAME",
+            value=st.session_state.get("storm_name","")).strip()
+        st.session_state["storm_name"] = storm_name_filter
 
-    st.session_state["storm_name"] = st.text_input("Search by storm NAME",
-        value=st.session_state.get("storm_name", "")).strip()
+        # click once to apply all sidebar changes together
+        apply = st.form_submit_button("Apply")
+    if apply:
+        st.rerun()
 
-    st.markdown("### Location Search")
-    c1, c2 = st.columns(2)
-    with c1: st.text_input("Lat", value=str(st.session_state["center_lat"]), key="lat_in")
-    with c2: st.text_input("Lon", value=str(st.session_state["center_lon"]), key="lon_in")
-    address = st.text_input("Type a location (e.g., Miami Beach)", key="txt_addr")
-    if st.button("Search", key="btn_search") and address.strip():
-        try:
-            resp = geocode(address)
-            if resp:
-                st.session_state["center_lat"] = float(resp[0]["lat"])
-                st.session_state["center_lon"] = float(resp[0]["lon"])
-                st.session_state["clicked_lat"] = st.session_state["center_lat"]
-                st.session_state["clicked_lon"] = st.session_state["center_lon"]
-                st.session_state["zoom"] = 5
-                st.success(f"📍 Found: {resp[0]['display_name']}")
-                st.rerun()  # refresh map right away after search
-            else:
-                st.warning("❌ No location found.")
-        except Exception as e:
-            st.error(f"⚠️ Error: {e}")
+
+
+
+
 
 selected_month = st.session_state["selected_month"]
 center_lat = float(st.session_state["center_lat"])
