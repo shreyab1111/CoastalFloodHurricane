@@ -574,8 +574,8 @@ flood_depth = water_level.subtract(DEM).max(0)
 flooded = flood_depth.updateMask(flood_depth.gt(0).And(DEM.gt(0)))
 
 # ---------------- Map build ----------------
-#m = geemap.Map(center=(center_lat, center_lon), zoom=zoom)
-m = geemap.Map(center=(center_lat, center_lon), zoom=zoom, ee_initialize=False)
+m = geemap.Map(center=(center_lat, center_lon), zoom=zoom)
+# m = geemap.Map(center=(center_lat, center_lon), zoom=zoom, ee_initialize=False)
 
 # Disable interactive controls that steal pointer events
 for fn in ("remove_draw_control", "remove_measure_control", "remove_inspector"):
